@@ -56,6 +56,12 @@ public static class CatalogApi
             .WithDescription("Get per-brand and per-type item counts for the current filter selection, used to drive the catalog filter badges without transferring every item to the client.")
             .WithTags("Items");
 
+        api.MapGet("/items/lowstock", GetLowStockItems)
+            .WithName("GetLowStockItems")
+            .WithSummary("List low stock catalog items")
+            .WithDescription("Get catalog items whose available stock is at or below their restock threshold.")
+            .WithTags("Items");
+
         // Routes for resolving catalog items using AI.
         v1.MapGet("/items/withsemanticrelevance/{text:minlength(1)}", GetItemsBySemanticRelevanceV1)
             .WithName("GetRelevantItems")
@@ -202,6 +208,32 @@ public static class CatalogApi
             typeCounts,
             brandCounts.Sum(b => b.Count),
             typeCounts.Sum(t => t.Count)));
+    }
+
+    public static async Task<Ok<PaginatedItems<CatalogItem>>> GetLowStockItems(
+        [AsParameters] PaginationRequest paginationRequest,
+        [AsParameters] CatalogServices services,
+        [Description("Optional stock level to use instead of each item's restock threshold")] int? threshold)
+    {
+        var pageSize = paginationRequest.PageSize;
+        var pageIndex = paginationRequest.PageIndex;
+
+        var root = services.Context.CatalogItems
+            .Where(i => i.AvailableStock <= (threshold ?? i.RestockThreshold));
+
+        var totalItems = await root
+            .LongCountAsync();
+
+        var itemsOnPage = await root
+            .AsNoTracking()
+            .Include(ci => ci.CatalogBrand)
+            .OrderBy(i => i.AvailableStock)
+            .ThenBy(i => i.Id)
+            .Skip(pageSize * pageIndex)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
     }
 
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]

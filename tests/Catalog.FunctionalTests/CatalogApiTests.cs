@@ -504,4 +504,62 @@ public sealed class CatalogApiTests : IClassFixture<CatalogApiFixture>
         Assert.Empty(result!.Data);
         Assert.Equal(1000, result.PageIndex);
     }
+
+    [Theory]
+    [InlineData(1.0)]
+    [InlineData(2.0)]
+    public async Task GetLowStockItemsIncludesItemsAtThresholdOrderedByStock(double version)
+    {
+        var httpClient = CreateHttpClient(new ApiVersion(version));
+
+        // Seeded items have AvailableStock = 100, so this threshold hits the boundary
+        var response = await httpClient.GetAsync("/api/catalog/items/lowstock?threshold=100&pageSize=50", TestContext.Current.CancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedItems<CatalogItem>>(
+            _jsonSerializerOptions,
+            TestContext.Current.CancellationToken);
+        var stockLevels = result!.Data.Select(i => i.AvailableStock).ToList();
+        Assert.NotEmpty(stockLevels);
+        Assert.All(stockLevels, stock => Assert.True(stock <= 100));
+        Assert.Equal(stockLevels.Order().ToList(), stockLevels);
+    }
+
+    [Theory]
+    [InlineData(1.0)]
+    [InlineData(2.0)]
+    public async Task GetLowStockItemsUsesItemRestockThresholdByDefault(double version)
+    {
+        var httpClient = CreateHttpClient(new ApiVersion(version));
+
+        // Seeded items have AvailableStock = 100 and RestockThreshold = 10
+        var response = await httpClient.GetAsync("/api/catalog/items/lowstock", TestContext.Current.CancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedItems<CatalogItem>>(
+            _jsonSerializerOptions,
+            TestContext.Current.CancellationToken);
+        Assert.Empty(result!.Data);
+        Assert.Equal(0, result.Count);
+    }
+
+    [Theory]
+    [InlineData(1.0)]
+    [InlineData(2.0)]
+    public async Task GetLowStockItemsDoesNotFlagItemsForReorder(double version)
+    {
+        var httpClient = CreateHttpClient(new ApiVersion(version));
+        const string url = "/api/catalog/items/lowstock?threshold=100";
+
+        var firstResponse = await httpClient.GetAsync(url, TestContext.Current.CancellationToken);
+        firstResponse.EnsureSuccessStatusCode();
+
+        var secondResponse = await httpClient.GetAsync(url, TestContext.Current.CancellationToken);
+        secondResponse.EnsureSuccessStatusCode();
+        var result = await secondResponse.Content.ReadFromJsonAsync<PaginatedItems<CatalogItem>>(
+            _jsonSerializerOptions,
+            TestContext.Current.CancellationToken);
+        Assert.NotEmpty(result!.Data);
+        Assert.All(result.Data, item => Assert.False(item.OnReorder));
+    }
 }
