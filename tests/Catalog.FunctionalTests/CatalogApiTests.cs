@@ -504,4 +504,20 @@ public sealed class CatalogApiTests : IClassFixture<CatalogApiFixture>
         Assert.Empty(result!.Data);
         Assert.Equal(1000, result.PageIndex);
     }
+
+    [Theory]
+    [InlineData(1.0)]
+    [InlineData(2.0)]
+    public async Task GetLowStockItemsReturnsItems(double version)
+    {
+        var httpClient = CreateHttpClient(new ApiVersion(version));
+
+        var response = await httpClient.GetAsync("/api/catalog/items/lowstock?threshold=100", TestContext.Current.CancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<List<CatalogItem>>(
+            _jsonSerializerOptions,
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(result);
+    }
 }

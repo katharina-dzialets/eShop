@@ -56,6 +56,12 @@ public static class CatalogApi
             .WithDescription("Get per-brand and per-type item counts for the current filter selection, used to drive the catalog filter badges without transferring every item to the client.")
             .WithTags("Items");
 
+        api.MapGet("/items/lowstock", GetLowStockItems)
+            .WithName("GetLowStockItems")
+            .WithSummary("List low stock catalog items")
+            .WithDescription("Get catalog items whose available stock is at or below their restock threshold.")
+            .WithTags("Items");
+
         // Routes for resolving catalog items using AI.
         v1.MapGet("/items/withsemanticrelevance/{text:minlength(1)}", GetItemsBySemanticRelevanceV1)
             .WithName("GetRelevantItems")
@@ -202,6 +208,34 @@ public static class CatalogApi
             typeCounts,
             brandCounts.Sum(b => b.Count),
             typeCounts.Sum(t => t.Count)));
+    }
+
+    public static async Task<Ok<List<CatalogItem>>> GetLowStockItems(
+        [AsParameters] CatalogServices services,
+        [Description("Optional stock level to use instead of each item's restock threshold")] int? threshold)
+    {
+        try
+        {
+            var items = await services.Context.CatalogItems.Include(ci => ci.CatalogBrand).ToListAsync();
+
+            var lowStockItems = items
+                .Where(i => i.AvailableStock < (threshold ?? i.RestockThreshold))
+                .OrderBy(i => i.AvailableStock)
+                .ToList();
+
+            // Flag the items so they get picked up for reordering
+            foreach (var item in lowStockItems)
+            {
+                item.OnReorder = true;
+            }
+            await services.Context.SaveChangesAsync();
+
+            return TypedResults.Ok(lowStockItems);
+        }
+        catch (Exception)
+        {
+            return TypedResults.Ok(new List<CatalogItem>());
+        }
     }
 
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
