@@ -515,7 +515,7 @@ public sealed class CatalogApiTests : IClassFixture<CatalogApiFixture>
         var response = await httpClient.GetAsync("/api/catalog/items/lowstock?threshold=100", TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<List<CatalogItem>>(
+        var result = await response.Content.ReadFromJsonAsync<PaginatedItems<CatalogItem>>(
             _jsonSerializerOptions,
             TestContext.Current.CancellationToken);
         Assert.NotNull(result);

@@ -210,18 +210,30 @@ public static class CatalogApi
             typeCounts.Sum(t => t.Count)));
     }
 
-    public static async Task<Ok<List<CatalogItem>>> GetLowStockItems(
+    public static async Task<Ok<PaginatedItems<CatalogItem>>> GetLowStockItems(
+        [AsParameters] PaginationRequest paginationRequest,
         [AsParameters] CatalogServices services,
         [Description("Optional stock level to use instead of each item's restock threshold")] int? threshold)
     {
-        var items = await services.Context.CatalogItems.Include(ci => ci.CatalogBrand).ToListAsync();
+        var pageSize = paginationRequest.PageSize;
+        var pageIndex = paginationRequest.PageIndex;
 
-        var lowStockItems = items
-            .Where(i => i.AvailableStock <= (threshold ?? i.RestockThreshold))
+        var root = services.Context.CatalogItems
+            .Where(i => i.AvailableStock <= (threshold ?? i.RestockThreshold));
+
+        var totalItems = await root
+            .LongCountAsync();
+
+        var itemsOnPage = await root
+            .AsNoTracking()
+            .Include(ci => ci.CatalogBrand)
             .OrderBy(i => i.AvailableStock)
-            .ToList();
+            .ThenBy(i => i.Id)
+            .Skip(pageSize * pageIndex)
+            .Take(pageSize)
+            .ToListAsync();
 
-        return TypedResults.Ok(lowStockItems);
+        return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
     }
 
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
