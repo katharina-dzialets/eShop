@@ -214,21 +214,14 @@ public static class CatalogApi
         [AsParameters] CatalogServices services,
         [Description("Optional stock level to use instead of each item's restock threshold")] int? threshold)
     {
-        try
-        {
-            var items = await services.Context.CatalogItems.Include(ci => ci.CatalogBrand).ToListAsync();
+        var items = await services.Context.CatalogItems.Include(ci => ci.CatalogBrand).ToListAsync();
 
-            var lowStockItems = items
-                .Where(i => i.AvailableStock <= (threshold ?? i.RestockThreshold))
-                .OrderBy(i => i.AvailableStock)
-                .ToList();
+        var lowStockItems = items
+            .Where(i => i.AvailableStock <= (threshold ?? i.RestockThreshold))
+            .OrderBy(i => i.AvailableStock)
+            .ToList();
 
-            return TypedResults.Ok(lowStockItems);
-        }
-        catch (Exception)
-        {
-            return TypedResults.Ok(new List<CatalogItem>());
-        }
+        return TypedResults.Ok(lowStockItems);
     }
 
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
