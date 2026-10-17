@@ -219,7 +219,7 @@ public static class CatalogApi
             var items = await services.Context.CatalogItems.Include(ci => ci.CatalogBrand).ToListAsync();
 
             var lowStockItems = items
-                .Where(i => i.AvailableStock < (threshold ?? i.RestockThreshold))
+                .Where(i => i.AvailableStock <= (threshold ?? i.RestockThreshold))
                 .OrderBy(i => i.AvailableStock)
                 .ToList();
 
