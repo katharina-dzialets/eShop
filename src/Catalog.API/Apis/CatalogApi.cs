@@ -223,13 +223,6 @@ public static class CatalogApi
                 .OrderBy(i => i.AvailableStock)
                 .ToList();
 
-            // Flag the items so they get picked up for reordering
-            foreach (var item in lowStockItems)
-            {
-                item.OnReorder = true;
-            }
-            await services.Context.SaveChangesAsync();
-
             return TypedResults.Ok(lowStockItems);
         }
         catch (Exception)
