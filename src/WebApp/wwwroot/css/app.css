@@ -265,6 +265,12 @@
     --danger-600: #b32121;
     --danger-tint: #fdecea;
 
+    /* Action blue: the one blue in the palette, used only by the floating
+       "back to top" button. White text on it is >= 6.7:1 at every state. */
+    --blue-700: #1d4ed8;
+    --blue-800: #1e40af;
+    --blue-900: #1e3a8a;
+
     /* ======================================================================
        LAYER 2 - Semantic tokens (what components actually consume). These map
        intent onto the palette above, so components never reference a raw hex.
@@ -286,6 +292,11 @@
     --color-danger: var(--danger-500);
     --color-danger-strong: var(--danger-600);
     --color-danger-tint: var(--danger-tint);
+
+    /* Action blue (back-to-top button) */
+    --color-action-blue: var(--blue-700);
+    --color-action-blue-hover: var(--blue-800);
+    --color-action-blue-active: var(--blue-900);
 
     /* Interactive accent repointed to monochrome ink (green fully demoted). */
     --accent: var(--color-ink);

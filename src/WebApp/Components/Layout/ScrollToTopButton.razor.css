@@ -1,0 +1,78 @@
+.scroll-top-fab {
+    /* Floats in the bottom-left corner while the page scrolls, mirroring the chatbot
+       launcher on the right: left-aligned to the content column (the brand logo's edge)
+       and, through js/scroll-top.js, lifted onto the content/footer divider once the
+       footer rises into view, so it never covers the footer links. With no JS it simply
+       floats at the corner gap. */
+    position: fixed;
+    bottom: var(--fab-bottom, 1.5rem);
+    left: var(--fab-left, max(var(--page-pad, 1.5rem), calc((100vw - var(--content-max, 120rem)) / 2 + var(--page-pad, 1.5rem))));
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 4rem;
+    height: 4rem;
+    margin: 0;
+    padding: 0 1.5rem;
+    border: none;
+    border-radius: var(--radius-pill, 999px);
+    background: var(--color-action-blue, #1d4ed8);
+    color: #ffffff;
+    font: inherit;
+    font-size: var(--text-lg, 1.125rem);
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    /* Same surface ring as the chatbot launcher keeps the button legible over the light
+       content and the dark footer it straddles once docked. */
+    box-shadow:
+        0 0 0 4px var(--color-surface, #fff),
+        0 14px 30px rgba(20, 20, 20, 0.30);
+    cursor: pointer;
+    transition:
+        background-color var(--dur-1, 140ms) linear,
+        transform var(--dur-2, 220ms) var(--ease, ease),
+        box-shadow var(--dur-2, 220ms) var(--ease, ease);
+}
+
+.scroll-top-fab:hover {
+    background: var(--color-action-blue-hover, #1e40af);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow:
+        0 0 0 4px var(--color-surface, #fff),
+        0 20px 44px rgba(20, 20, 20, 0.38);
+}
+
+.scroll-top-fab:active {
+    background: var(--color-action-blue-active, #1e3a8a);
+    transform: translateY(0) scale(0.97);
+}
+
+.scroll-top-fab:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 3px var(--color-surface, #fff),
+        0 0 0 6px var(--color-action-blue-active, #1e3a8a),
+        0 14px 30px rgba(20, 20, 20, 0.30);
+}
+
+/* Phones: the open assistant panel is a full-width bottom sheet that would sit on top
+   of the button, so step aside while it is open. */
+@media only screen and (max-width: 480px) {
+    body:has(.chatbot-dock.is-open) .scroll-top-fab {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scroll-top-fab {
+        transition: background-color var(--dur-1, 140ms) linear, box-shadow var(--dur-1, 140ms) linear;
+    }
+
+    .scroll-top-fab:hover,
+    .scroll-top-fab:active {
+        transform: none;
+    }
+}
