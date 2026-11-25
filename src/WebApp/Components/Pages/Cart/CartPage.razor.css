@@ -263,7 +263,7 @@
     width: 22rem;
     align-self: flex-start;
     position: sticky;
-    top: calc(var(--topbar-h) + 1.5rem);
+    top: var(--sticky-panel-top);
 }
 
 .cart-summary-container {

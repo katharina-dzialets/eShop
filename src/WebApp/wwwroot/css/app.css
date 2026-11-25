@@ -317,6 +317,11 @@
     --content-max: 120rem;
     --page-pad: clamp(1rem, 5vw, 10rem);
     --topbar-h: 4.25rem;
+    /* Floating corner Checkout button (CornerCheckoutButton): its slot below the top bar. */
+    --corner-checkout-top: calc(var(--topbar-h) + 1rem);
+    --corner-checkout-h: 3.5rem;
+    /* Sticky side panels (cart summary, item buy box) pin below that button, not under it. */
+    --sticky-panel-top: calc(var(--corner-checkout-top) + var(--corner-checkout-h) + 1rem);
 
     /* Elevation (tinted to the ink hue, never pure black) */
     --shadow-sm: 0 1px 2px rgba(20, 20, 20, 0.06), 0 1px 3px rgba(20, 20, 20, 0.05);

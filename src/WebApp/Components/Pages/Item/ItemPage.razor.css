@@ -90,7 +90,7 @@
 
 .item-buy {
     position: sticky;
-    top: calc(var(--topbar-h) + 1.5rem);
+    top: var(--sticky-panel-top);
     align-self: start;
 }
 
