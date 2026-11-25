@@ -16,6 +16,7 @@ See [Prerequisites](../README.md#prerequisites) for details.
 - [ ] Install a [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) that satisfies [`global.json`](../global.json).
 - [ ] Install the [Aspire CLI](https://aspire.dev/get-started/install-cli/) and check it with `aspire --version`.
 - [ ] Install and start an OCI-compatible container runtime: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (recommended) or [Podman](https://podman.io/docs/installation).
+- [ ] For the Playwright tests and the Markdown lint, install Node.js with npm. The repository pins no version (`package.json` has no `engines` field); CI uses `lts/*` for Playwright and `20.x` for Markdownlint.
 - [ ] Clone the repository: `git clone https://github.com/dotnet/eShop.git`, then `cd eShop`.
 - [ ] Optional: set up an IDE ([Optional IDE setup](../README.md#optional-ide-setup)).
 
