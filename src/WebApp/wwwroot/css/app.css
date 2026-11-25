@@ -385,7 +385,7 @@ button[disabled],
 }
 
 /* ==========================================================================
-   Button system  (primary / secondary / ghost)
+   Button system  (primary / secondary / ghost / danger)
    ========================================================================== */
 .button {
     display: flex;
@@ -444,6 +444,17 @@ button[disabled],
 
 .button.button-ghost:hover {
     background: var(--color-surface-2);
+}
+
+.button.button-danger {
+    background: var(--color-danger);
+    color: #fff;
+    border-color: var(--color-danger);
+}
+
+.button.button-danger:hover {
+    background: var(--color-danger-strong);
+    border-color: var(--color-danger-strong);
 }
 
 /* Circular icon action (nav cart / account, etc.) */
