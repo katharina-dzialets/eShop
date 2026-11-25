@@ -1,0 +1,23 @@
+/* Floats at the viewport's top-right corner on every page, just below the sticky top
+   bar so it never covers the account and cart icons. Right-aligned to the same column
+   as the top bar actions (and the chatbot launcher) on very wide screens. Sits under
+   the top bar (z-index 100) so the account menu still opens above it. */
+.corner-checkout {
+    position: fixed;
+    top: calc(var(--topbar-height, 4.25rem) + 1rem);
+    right: max(var(--page-pad, 1.5rem), calc((100vw - var(--content-max, 120rem)) / 2 + var(--page-pad, 1.5rem)));
+    z-index: 90;
+    padding: 1.1rem 2rem;
+    font-size: var(--text-lg, 1.25rem);
+    font-weight: 700;
+    box-shadow: var(--shadow-md);
+}
+
+@media only screen and (max-width: 560px) {
+    .corner-checkout {
+        --topbar-height: 3.75rem;
+        top: calc(var(--topbar-height) + 0.75rem);
+        padding: 0.85rem 1.4rem;
+        font-size: var(--text-base, 1rem);
+    }
+}
