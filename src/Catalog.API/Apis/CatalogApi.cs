@@ -158,6 +158,7 @@ public static class CatalogApi
 
         var itemsOnPage = await root
             .Include(ci => ci.CatalogBrand)
+            .Include(ci => ci.CatalogType)
             .OrderBy(c => c.Name)
             .Skip(pageSize * pageIndex)
             .Take(pageSize)

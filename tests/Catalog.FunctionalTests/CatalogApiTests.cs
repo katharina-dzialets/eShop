@@ -294,6 +294,26 @@ public sealed class CatalogApiTests : IClassFixture<CatalogApiFixture>
         Assert.Equal(5, result.PageSize);
     }
 
+    [Fact]
+    public async Task GetAllItemsIncludesCatalogTypeName()
+    {
+        var _httpClient = CreateHttpClient(new ApiVersion(2.0));
+
+        var response = await _httpClient.GetAsync("api/catalog/items?type=3&PageSize=5&PageIndex=0", TestContext.Current.CancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var result = JsonSerializer.Deserialize<PaginatedItems<CatalogItem>>(body, _jsonSerializerOptions);
+
+        Assert.NotEmpty(result.Data);
+        Assert.All(result.Data, item =>
+        {
+            Assert.NotNull(item.CatalogType);
+            Assert.Equal(3, item.CatalogType.Id);
+            Assert.False(string.IsNullOrWhiteSpace(item.CatalogType.Type));
+        });
+    }
+
     [Theory]
     [InlineData(1.0)]
     [InlineData(2.0)]

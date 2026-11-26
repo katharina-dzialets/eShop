@@ -14,7 +14,13 @@
             }
         </span>
         <span class='catalog-product-content'>
-            <span class='name'>@Item.Name</span>
+            <span class='catalog-product-text'>
+                <span class='name'>@Item.Name</span>
+                @if (Item.CatalogType is { Type.Length: > 0 } type)
+                {
+                    <span class="catalog-product-type">@type.Type</span>
+                }
+            </span>
             <span class='price'>$@Item.Price.ToPriceDisplay()</span>
         </span>
     </a>
