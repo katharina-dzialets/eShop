@@ -72,8 +72,16 @@ log "docker $(docker info --format '{{.ServerVersion}}')"
 
 # --- Node / Playwright dependencies (e2e tests) --------------------------------------------
 if command -v npm >/dev/null 2>&1; then
-  log "npm ci"
-  npm ci --no-audit --no-fund
+  # package-lock.json pins some tarballs to a Microsoft-internal Azure Artifacts feed
+  # (*.pkgs.visualstudio.com) that is not reachable here. Install from a temp copy of the lockfile
+  # with those URLs mapped to registry.npmjs.org (same tarballs/integrity), leaving the tracked file untouched.
+  log "npm ci (lockfile feed URLs mapped to registry.npmjs.org)"
+  NPM_TMP="$(mktemp -d)"
+  cp package.json "$NPM_TMP/"
+  sed -E 's#https://[a-z0-9-]+\.pkgs\.visualstudio\.com/[^"]*/npm/registry/#https://registry.npmjs.org/#' \
+    package-lock.json > "$NPM_TMP/package-lock.json"
+  (cd "$NPM_TMP" && npm ci --no-audit --no-fund)
+  rm -rf node_modules && mv "$NPM_TMP/node_modules" ./node_modules && rm -rf "$NPM_TMP"
   log "Installing Playwright chromium + system deps"
   sudo env "PATH=$PATH" npx playwright install-deps chromium
   npx playwright install chromium
@@ -85,15 +93,16 @@ dotnet build eShop.Web.slnf -nologo -clp:ErrorsOnly
 log "Build finished"
 
 # --- Start the AppHost in the background ---------------------------------------------------
-if ! curl -fsS -o /dev/null "$WEBAPP_URL"; then
+if ! curl -fsS -o /dev/null "$WEBAPP_URL" 2>/dev/null; then
   log "Starting AppHost (log: $APPHOST_LOG)"
-  nohup dotnet run --no-build --project src/eShop.AppHost/eShop.AppHost.csproj > "$APPHOST_LOG" 2>&1 &
+  setsid nohup dotnet run --no-build --project src/eShop.AppHost/eShop.AppHost.csproj > "$APPHOST_LOG" 2>&1 < /dev/null &
 fi
 
 healthcheck() {
   log "healthcheck: waiting for WebApp at $WEBAPP_URL"
   local n=0
-  until curl -fsS -o /tmp/eshop-home.html "$WEBAPP_URL/" 2>/dev/null && grep -qi "AdventureWorks\|catalog" /tmp/eshop-home.html; do
+  until curl -fsS -o /tmp/eshop-home.html "$WEBAPP_URL/" 2>/dev/null && grep -q "AdventureWorks" /tmp/eshop-home.html \
+        && grep -q 'class="catalog-item"' /tmp/eshop-home.html; do
     if ! pgrep -f "eShop.AppHost" >/dev/null; then
       log "healthcheck: AppHost process exited; last log lines:"; tail -50 "$APPHOST_LOG"; return 1
     fi
@@ -104,7 +113,11 @@ healthcheck() {
     fi
     sleep 2
   done
-  log "healthcheck: WebApp home page served ($(wc -c < /tmp/eshop-home.html) bytes)"
+  log "healthcheck: store front served with $(grep -o 'class="catalog-item"' /tmp/eshop-home.html | wc -l) catalog items"
+  local img
+  img="$(grep -oE 'product-images/[0-9]+[^"]*' /tmp/eshop-home.html | head -1 | sed 's/&amp;/\&/g' || true)"
+  until curl -fsS -o /dev/null "$WEBAPP_URL/$img"; do log "healthcheck: waiting for product image $img"; sleep 2; done
+  log "healthcheck: product image served (catalog-api + postgres OK)"
   log "healthcheck: OK"
 }
 
