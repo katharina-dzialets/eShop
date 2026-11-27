@@ -27,6 +27,11 @@ public class OrderItem
             throw new OrderingDomainException("Invalid number of units");
         }
 
+        if (discount < 0)
+        {
+            throw new OrderingDomainException("Discount is not valid");
+        }
+
         if ((unitPrice * units) < discount)
         {
             throw new OrderingDomainException("The total of order item is lower than applied discount");
