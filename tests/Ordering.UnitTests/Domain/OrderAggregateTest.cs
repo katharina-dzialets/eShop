@@ -76,6 +76,21 @@ public class OrderAggregateTest
     }
 
     [TestMethod]
+    public void Invalid_negative_discount_in_constructor()
+    {
+        //Arrange
+        var productId = 1;
+        var productName = "QA product";
+        var unitPrice = 10m;
+        var discount = -1m;
+        var pictureUrl = "";
+        var units = 1;
+
+        //Act - Assert
+        Assert.ThrowsExactly<OrderingDomainException>(() => new OrderItem(productId, productName, unitPrice, discount, pictureUrl, units));
+    }
+
+    [TestMethod]
     public void Invalid_units_setting()
     {
         //Arrange    
